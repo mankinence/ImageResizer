@@ -13,7 +13,7 @@ An Anki add-on used to resize images, automatically or on command! Download on [
 <li><b>Update 9</b>: support files with uppercased extensions</li>
 <li><b>Update 10</b>: A big thanks to <a href="https://github.com/lgaborini" rel="nofollow">lgaborini</a> for porting ImageResizer to Anki2.1. Jul 25, 2018</li>
 <li><b>Update 11</b>: Fix the encoding issue in Anki 2.1. Sep 10, 2018</li>
-<li><b>Update 12</b>: No functional change to the add-on. It now has a new maintainer and <a href="https://github.com/mankinence/ImageResizer" rel="nofollow">location on GitHub</a>. A big thanks to [searene](https://github.com/searene) for creating this add-on! April 23, 2020</li>
+<li><b>Update 12</b>: No functional change to the add-on. It now has a new maintainer and <a href="https://github.com/mankinence/ImageResizer" rel="nofollow">location on GitHub</a>. A big thanks to <a href="https://github.com/searene" rel="nofollow">searene</a> for creating this add-on! April 23, 2020</li>
 </ul>
 
 #### Introduction
