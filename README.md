@@ -74,7 +74,7 @@ See the Settings section above for how to access the Settings menu.
 #### Improvements or bug reports
 
 If you have any issues or requests, please submit an Issue (using the Issues button in the menu above.) 
-Pull requests are welcome, though I recommend getting in touch with me before putting in too much work!
+Pull requests are welcome, though I recommend getting in touch with me before putting in too much work! (A lot of the commit history was lost in the transition and can be found in [the old repo](https://github.com/searene/Anki-Addons).)
 
 If you don't know how to use GitHub, you can also send an email to carmodym2+mankinence AT gmail DOT com.
 I will try my best to help you solve the problem.
