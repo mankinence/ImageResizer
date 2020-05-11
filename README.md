@@ -26,11 +26,11 @@ This add-on does NOT change the size of images that are already in cards, it onl
 
 #### Before resizing
 
-<img src="http://i.imgur.com/54kbvhl.jpg">
+<img src="images/before_resizing.jpg">
 
 #### After resizing
 
-<img src="http://i.imgur.com/hQ1zeMU.png">
+<img src="images/after_resizing.png">
 
 ## Usage
 
@@ -40,11 +40,11 @@ Install ImageResizer, and that's it! Images will be automatically resized on pas
 
 You can change the keyboard shortcut, size of the image and other settings by selecting `Tools -> Image Resizer` from the top menu bar.
 
-<img src="http://i.imgur.com/ylv6iQK.png">
+<img src="images/go_to_settings.png">
 
 The <b>Settings</b> window will pop up.
 
-<img src="https://i.imgur.com/xqPGEfy.png">
+<img src="images/settings.png">
 
 1. Check `Resize on pasting` so that images will be resized automatically. Uncheck it if you only want images to be resized when pressing the shortcut.
 2. Check `Disable upscaling` if you only want to make images smaller.
