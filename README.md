@@ -67,6 +67,8 @@ Make sure you have `use smooth transformation` set, this makes the paste slower 
 If you pasted a small image that was made bigger and became blurry even with `use smooth transformation` set,
 you may just need to use the original image size, see the next Common Issue below.
 
+<img src="images/fast_vs_smooth.png">
+
 ###### Small images are being made bigger
 If you don't want small images to be made bigger, check the `Disable upscaling` box in the Settings menu.
 See the Settings section above for how to access the Settings menu.
