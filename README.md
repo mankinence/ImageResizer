@@ -1,7 +1,7 @@
 # ImageResizer
 An Anki add-on used to resize images, automatically or on command! Download on [AnkiWeb](https://ankiweb.net/shared/info/1214357311) or with add-on number 1214357311.
 
-Have feedback or contributions? See the [contributing page](CONTRIBUTING.md).
+Having issues, want to contribute or want to give feedback? See the [contributing page](CONTRIBUTING.md).
 Want to see a history of the add-on changes? See the [history page](HISTORY.md).
 
 #### Introduction
@@ -47,17 +47,3 @@ There's also a third option, `scale to the maximum dimension and keep ratio`.
 If this option is chosen, ImageResizer will scale to width if width > height,
 and will scale to height if height > width.
 This option is useful when the ratio of height/width of the image is extreme.
-
-#### Common Issues
-
-###### Blurry images
-If you aren't satisfied with the quality of the image after its resized, try changing your Settings (see the above section for specific instructions.)
-Make sure you have `use smooth transformation` set, this makes the paste slower but higher quality.
-If you pasted a small image that was made bigger and became blurry even with `use smooth transformation` set,
-you may just need to use the original image size, see the next Common Issue below.
-
-<img src="images/fast_vs_smooth.png">
-
-###### Small images are being made bigger
-If you don't want small images to be made bigger, check the `Disable upscaling` box in the Settings menu.
-See the Settings section above for how to access the Settings menu.
