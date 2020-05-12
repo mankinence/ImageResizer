@@ -14,11 +14,11 @@ It can be configured to automatically resize every image you paste or it can be 
 
 This add-on does **NOT** change the size of images that are already in cards, it only applies to new images.
 
-#### Before resizing
+#### Without ImageResizer
 
 <img src="images/before_resizing.jpg">
 
-#### After resizing
+#### With ImageResizer
 
 <img src="images/after_resizing.png">
 
