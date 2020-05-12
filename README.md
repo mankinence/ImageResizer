@@ -1,7 +1,8 @@
 # ImageResizer
-An Anki add-on used to resize images, automatically or on command! Download on [AnkiWeb](https://ankiweb.net/shared/info/1214357311) or with add-on number 1214357311.
+Download on [AnkiWeb](https://ankiweb.net/shared/info/1214357311) or with add-on number 1214357311.
 
 Having issues, want to contribute or want to give feedback? See the [contributing page](CONTRIBUTING.md).
+
 Want to see a history of the add-on changes? See the [history page](HISTORY.md).
 
 #### Introduction
