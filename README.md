@@ -11,7 +11,8 @@ ImageResizer is a simple Anki add-on used to resize images, automatically or on 
 Sometimes images are too big or small for the screen when reviewing.
 This add-on gives you the power to define an image size in advance and paste images onto cards with those dimensions!
 It can be configured to automatically resize every image you paste or it can be assigned a keyboard shortcut so you can resize sometimes but not others.
-This add-on does NOT change the size of images that are already in cards, it only applies to new images.
+
+This add-on does **NOT** change the size of images that are already in cards, it only applies to new images.
 
 #### Before resizing
 
