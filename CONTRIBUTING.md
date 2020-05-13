@@ -12,19 +12,23 @@ I will try my best to help you solve the problem.
 #### Common Issues
 
 ###### Blurry images
-If you aren't satisfied with the quality of the image after its resized, try changing your Settings.
+If you aren't satisfied with the quality of the image after its resized, try changing your ImageResizer Settings.
 Make sure you have `use smooth transformation` set, this makes the paste slower but higher quality.
-The [README](README.md) has specific instructions for accessing and changing settings.
+The [README](README.md) has specific instructions for accessing and changing ImageResizer settings.
 This small change can make a big difference, here's an example:
 
 <img src="images/fast_vs_smooth.png">
 
-If you pasted a small image that was made bigger and became blurry even with `use smooth transformation` set,
+If the images are still blurry with smooth transformation on you may want to change your Anki settings.
+Select `Tools -> Preferences` and check the box for `Paste clipboard images as PNG`. Depending on the format of the
+image you're trying to resize, this may give a higher quality image.
+
+If you pasted a small image that was made bigger and became blurry even after playing with settings,
 you may just need to use the original image size for small images.
 See the next Common Issue below.
 
 ###### Small images are being made bigger
-If you don't want small images to be made bigger, check the `Disable upscaling` box in the Settings menu.
+If you don't want small images to be made bigger, check the `Disable upscaling` box in the ImageResizer Settings menu.
 See the [README](README.md) for how to access and change settings.
 
 
