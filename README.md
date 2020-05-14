@@ -12,7 +12,7 @@ Sometimes images are too big or small for the screen when reviewing.
 This add-on gives you the power to define an image size in advance and paste images onto cards with those dimensions!
 It can be configured to automatically resize every image you paste or it can be assigned a keyboard shortcut so you can resize sometimes but not others.
 
-What does this add-on **NOT** do? It does not change the size of images that are already in cards, it only applies to new images that are pasted. It also doesn't let you click and drag to change the size of an image. If you'd like to do that, check out the [Resize image in editor](https://ankiweb.net/shared/info/1103084694) add-on.
+What does this add-on **NOT** do? It does not change the size of images that are already in cards, it only applies to new images that are pasted. It also doesn't let you click and drag to change the size of an image. If you'd like to do that, check out the [Resize image in editor](https://ankiweb.net/shared/info/1103084694) add-on. For an overview of various add-ons for resizing images, check out the [AnKing video](https://www.youtube.com/watch?v=fpXTCDxFbeM).
 
 #### Without ImageResizer
 
