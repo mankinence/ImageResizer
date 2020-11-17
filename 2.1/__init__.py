@@ -6,8 +6,8 @@ from anki.media import MediaManager
 from aqt.utils import tooltip, showWarning
 from aqt.editor import Editor, EditorWebView
 from aqt import mw
-
 from aqt.qt import *
+from inspect import signature
 
 import os
 import pickle
@@ -113,7 +113,11 @@ class Setup(object):
         Editor.setupWeb = wrap(Editor.setupWeb, ImageResizerButton, 'after')
         Editor.imageResizer = imageResizer
 
-        EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around, 'around')
+        if  len((signature(EditorWebView._processMime)).parameters) == 2:
+            EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around, 'around')
+        else:
+            # From Anki 2.1.36, _processMime has one more parameter
+            EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around_with_extended, 'around')
 
     def _settings(self):
         """
@@ -187,9 +191,8 @@ def ImageResizerButton(self):
     shortcut += '+' + Setup.config['keys']['Extra']
     self.addButton(func = lambda s = self: imageResizer(self), 
         icon = None, label = "Image Resizer", cmd = 'imageResizer(self)', keys = _(shortcut))
-    
 
-def _processMime_around(self, mime, extended, _old):
+def _processMime_around(self, mime, _old):
     """I found that anki dealt with html, urls, text first before dealing with image, 
     I didn't find any advantages of it. If the user wants to copy an image from the web broweser, 
     it will make anki fetch the image again, which is a waste of time. the function will try to deal with image data first if mime contains it.contains
@@ -224,6 +227,9 @@ def _processMime_around(self, mime, extended, _old):
     
     logger.debug("image data isn't detected, run the old _processMime function")
     return _old(self, mime)
+
+def _processMime_around_with_extended(self, mime, extended, _old):
+    return _processMime_around(self, mime, _old)
 
 def checkAndResize(mime, editor):
     """check if mime contains url and if the url represents a picture file path, fetch the url and put the image in the clipboard if the url represents an image file
