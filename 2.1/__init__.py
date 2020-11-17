@@ -189,7 +189,7 @@ def ImageResizerButton(self):
         icon = None, label = "Image Resizer", cmd = 'imageResizer(self)', keys = _(shortcut))
     
 
-def _processMime_around(self, mime, _old):
+def _processMime_around(self, mime, extended, _old):
     """I found that anki dealt with html, urls, text first before dealing with image, 
     I didn't find any advantages of it. If the user wants to copy an image from the web broweser, 
     it will make anki fetch the image again, which is a waste of time. the function will try to deal with image data first if mime contains it.contains
