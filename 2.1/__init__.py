@@ -16,7 +16,7 @@ import copy
 import shutil
 import tempfile
 import ssl
-import urllib.request, urllib.error, urllib.parse
+import requests
 
 addon_id = '1214357311'
 
@@ -39,6 +39,7 @@ open(logFile, 'w').close()
 
 # setup logger
 logging.basicConfig(format = '%(asctime)s - %(name)s - %(funcName)s:%(lineno)d - %(levelname)s - %(message)s', filename = logFile, level = logging.DEBUG)
+logging.disable(logging.INFO)
 logger = logging.getLogger(__name__)
 
 # settings main window, Qt won't show the window if
@@ -53,7 +54,7 @@ class Setup(object):
     config = dict(
         isUpScalingDisabled = False,
         auto = True,
-        keys = dict(Ctrl = True, Alt = False, 
+        keys = dict(Ctrl = True, Alt = False,
                 Shift = True, Extra = 'V'),
         width = '400',
         height = '400',
@@ -152,9 +153,38 @@ def resize(im):
         if im.width() <= widthInConfig and not isUpScalingDisabled or im.width() > widthInConfig:
             logger.debug('scale according to width: {}'.format(int(Setup.config['width'])))
             im = im.scaledToWidth(widthInConfig, transformationMode)
-        
+
     logger.debug('image after resizing, width: {}, height: {}'.format(im.width(), im.height()))
     return im
+
+
+def isLocalImageFile(url):
+    pic = (".jpg", ".jpeg", ".png", ".tif", ".tiff", ".gif", ".svg", ".webp")
+    if not url.startswith("file://"):
+        return False
+    filename, fileExt = os.path.splitext(url)
+    return fileExt in pic
+
+
+def containsImage(qMimeData):
+    return containsImageInImageData(qMimeData) or containsImageInUrl(qMimeData)
+
+
+def containsImageInImageData(qMimeData):
+    return qMimeData.hasImage() and qMimeData.imageData() is not None
+
+
+def containsImageInUrl(qMimeData):
+    return containsLocalFileImageInUrl(qMimeData) or containsWebImageInUrl(qMimeData)
+
+
+def containsLocalFileImageInUrl(qMimeData):
+    return qMimeData.hasUrls() and isLocalImageFile(qMimeData.urls()[0].toString())
+
+
+def containsWebImageInUrl(qMimeData):
+    return qMimeData.hasImage() and qMimeData.urls() is not None
+
 
 def imageResizer(self, paste = True, mime = None):
     """resize the image contained in the clipboard
@@ -169,7 +199,7 @@ def imageResizer(self, paste = True, mime = None):
     logger.debug('imageResizer called!')
 
     # check if mime contains images or any image file urls
-    if mime.hasImage():
+    if containsImageInImageData(mime):
         logger.debug('mime contains images relative data in it: {}'.format(mime))
         logger.debug('paste action: {}'.format(paste))
 
@@ -189,12 +219,12 @@ def imageResizer(self, paste = True, mime = None):
 def ImageResizerButton(self):
     shortcut = '+' .join([k for k, v in list(Setup.config['keys'].items()) if v == True])
     shortcut += '+' + Setup.config['keys']['Extra']
-    self.addButton(func = lambda s = self: imageResizer(self), 
+    self.addButton(func = lambda s = self: imageResizer(self),
         icon = None, label = "Image Resizer", cmd = 'imageResizer(self)', keys = _(shortcut))
 
 def _processMime_around(self, mime, _old):
-    """I found that anki dealt with html, urls, text first before dealing with image, 
-    I didn't find any advantages of it. If the user wants to copy an image from the web broweser, 
+    """I found that anki dealt with html, urls, text first before dealing with image,
+    I didn't find any advantages of it. If the user wants to copy an image from the web broweser,
     it will make anki fetch the image again, which is a waste of time. the function will try to deal with image data first if mime contains it.contains
 
     This function is always called when pasting!"""
@@ -207,8 +237,9 @@ def _processMime_around(self, mime, _old):
     logger.debug('grabbing MIME data: found formats {}'.format(mime.formats()))
     logger.debug('hasImage: {}'.format(mime.hasImage()))
     logger.debug('hasUrls: {}'.format(mime.hasUrls()))
+    logger.debug(mime.urls()[0].toString())
 
-    if mime.hasImage():
+    if containsImage(mime):
 
         # Resize the image, then pass to Anki
         logger.debug('found image in mime data: getting the resized QImage...')
@@ -218,13 +249,6 @@ def _processMime_around(self, mime, _old):
         return _old(self, mime)
         # return self._processImage(mime)
 
-    if mime.hasUrls():
-        logger.debug('found URL in mime data: resizing if necessary...')
-        mime = self.editor.imageResizer(paste = False, mime = mime)
-
-        logger.debug('let anki handle the resized image')
-        return _old(self, mime)
-    
     logger.debug("image data isn't detected, run the old _processMime function")
     return _old(self, mime)
 
@@ -242,40 +266,32 @@ def checkAndResize(mime, editor):
     """
 
     logger.debug('checking if mime data is an image or an URL to an image...')
-    pic = ("jpg", "jpeg", "png", "tif", "tiff", "gif", "svg", "webp")
 
-    if mime.hasImage():
+    if containsImageInImageData(mime):
         logger.debug('found image in mime, resize and return the mime')
         im = resize(mime.imageData())
         mime = QMimeData()
         mime.setImageData(im)
 
-    elif mime.hasUrls():
+    elif containsImageInUrl(mime):
         url = mime.urls()[0].toString()
+        logger.debug("Found url: " + url)
 
-        # check prefix
-        prefix = url[:url.find(':')]
+        # fetch the image
+        if containsWebImageInUrl(mime):
+            im = QImage()
+            filecontents = requests.get(url)
+            im.loadFromData(filecontents.content)
+        elif containsLocalFileImageInUrl(mime):
+            im = QImage(url[len("file://"):])
 
-        # check suffix
-        for suffix in pic:
-            if url.lower().endswith(suffix):
-                logger.debug('suffix {} meet requirements'.format(suffix))
+        # resize it
+        im = resize(im)
 
-                # fetch the image, put it in the mime and return it
-                im = QImage()
-                req = urllib.request.Request(url, None, {
-                    'User-Agent': 'Mozilla/5.0 (compatible; Anki)'})
-                filecontents = urllib.request.urlopen(req).read()
-                
-                im.loadFromData(filecontents)
+        mime = QMimeData()
+        mime.setImageData(im)
 
-                # resize it
-                im = resize(im)
-
-                mime = QMimeData()
-                mime.setImageData(im)
-
-                return mime
+        return mime
 
     return mime
 
@@ -415,7 +431,7 @@ class Settings(QWidget):
             shutil.rmtree(Setup.irFolder)
         logger.debug('set config to the default one: {}'.format(Setup.defaultConfig))
         Setup.config = copy.deepcopy(Setup.defaultConfig)
-        self.setup.checkConfigAndLoad() 
+        self.setup.checkConfigAndLoad()
         self.checkPickle()
 
     def updateKeyCombinations(self):
