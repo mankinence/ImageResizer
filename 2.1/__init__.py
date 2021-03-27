@@ -166,6 +166,10 @@ def isLocalImageFile(url):
     return fileExt in pic
 
 
+def isWebImageFile(url):
+    return url.startswith("http") or url.startswith("https")
+
+
 def containsImage(qMimeData):
     return containsImageInImageData(qMimeData) or containsImageInUrl(qMimeData)
 
@@ -179,11 +183,11 @@ def containsImageInUrl(qMimeData):
 
 
 def containsLocalFileImageInUrl(qMimeData):
-    return qMimeData.hasUrls() and isLocalImageFile(qMimeData.urls()[0].toString())
+    return qMimeData.hasUrls() and qMimeData.urls() and isLocalImageFile(qMimeData.urls()[0].toString())
 
 
 def containsWebImageInUrl(qMimeData):
-    return qMimeData.hasImage() and qMimeData.urls() is not None
+    return qMimeData.hasUrls() and qMimeData.urls() and isWebImageFile(qMimeData.urls()[0].toString())
 
 
 def imageResizer(self, paste = True, mime = None):
@@ -237,7 +241,6 @@ def _processMime_around(self, mime, _old):
     logger.debug('grabbing MIME data: found formats {}'.format(mime.formats()))
     logger.debug('hasImage: {}'.format(mime.hasImage()))
     logger.debug('hasUrls: {}'.format(mime.hasUrls()))
-    logger.debug(mime.urls()[0].toString())
 
     if containsImage(mime):
 
@@ -274,6 +277,7 @@ def checkAndResize(mime, editor):
         mime.setImageData(im)
 
     elif containsImageInUrl(mime):
+        logger.debug(mime.urls())
         url = mime.urls()[0].toString()
         logger.debug("Found url: " + url)
 
