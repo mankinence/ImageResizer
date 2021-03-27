@@ -187,7 +187,7 @@ def containsLocalFileImageInUrl(qMimeData):
 
 
 def containsWebImageInUrl(qMimeData):
-    return qMimeData.hasUrls() and qMimeData.urls() and isWebImageFile(qMimeData.urls()[0].toString())
+    return qMimeData.hasImage() and qMimeData.hasUrls() and qMimeData.urls() and isWebImageFile(qMimeData.urls()[0].toString())
 
 
 def imageResizer(self, paste = True, mime = None):
