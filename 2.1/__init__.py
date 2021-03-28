@@ -8,6 +8,8 @@ from aqt.editor import Editor, EditorWebView
 from aqt import mw
 from aqt.qt import *
 from inspect import signature
+from bs4 import BeautifulSoup
+from PyQt5.QtCore import QUrl
 
 import os
 import pickle
@@ -171,7 +173,7 @@ def isWebImageFile(url):
 
 
 def containsImage(qMimeData):
-    return containsImageInImageData(qMimeData) or containsImageInUrl(qMimeData)
+    return containsImageInImageData(qMimeData) or containsImageInUrl(qMimeData) or (tryGettingImageSrcFromHtml(qMimeData) is not None)
 
 
 def containsImageInImageData(qMimeData):
@@ -189,6 +191,15 @@ def containsLocalFileImageInUrl(qMimeData):
 def containsWebImageInUrl(qMimeData):
     return qMimeData.hasImage() and qMimeData.hasUrls() and qMimeData.urls() and isWebImageFile(qMimeData.urls()[0].toString())
 
+
+def tryGettingImageSrcFromHtml(qMimeData):
+    if not (qMimeData.hasImage() and qMimeData.hasHtml() and qMimeData.html()):
+        return None
+    soup = BeautifulSoup(qMimeData.html(), features="html.parser")
+    imgs = soup.findAll("img")
+    if not imgs:
+        return None
+    return QUrl.fromUserInput(imgs[0]["src"]).toString()
 
 def imageResizer(self, paste = True, mime = None):
     """resize the image contained in the clipboard
@@ -275,8 +286,9 @@ def checkAndResize(mime, editor):
         im = resize(mime.imageData())
         mime = QMimeData()
         mime.setImageData(im)
+        return mime
 
-    elif containsImageInUrl(mime):
+    if containsImageInUrl(mime):
         logger.debug(mime.urls())
         url = mime.urls()[0].toString()
         logger.debug("Found url: " + url)
@@ -291,10 +303,18 @@ def checkAndResize(mime, editor):
 
         # resize it
         im = resize(im)
-
         mime = QMimeData()
         mime.setImageData(im)
+        return mime
 
+    imgLink = tryGettingImageSrcFromHtml(mime)
+    if imgLink is not None:
+        im = QImage()
+        im.loadFromData(requests.get(imgLink).content)
+        logger.debug("resizing")
+        im = resize(im)
+        mime = QMimeData()
+        mime.setImageData(im)
         return mime
 
     return mime
