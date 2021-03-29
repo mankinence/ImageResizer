@@ -19,6 +19,7 @@ import shutil
 import tempfile
 import ssl
 import requests
+import platform
 
 addon_id = '1214357311'
 
@@ -201,6 +202,15 @@ def tryGettingImageSrcFromHtml(qMimeData):
         return None
     return QUrl.fromUserInput(imgs[0]["src"]).toString()
 
+def isWin():
+    return platform.system() == "Windows"
+
+def extractLocalPathFromFileUrl(fileUrl):
+    if isWin():
+        return fileUrl[len("file:///"):]
+    else:
+        return fileUrl[len("file://"):]
+
 def imageResizer(self, paste = True, mime = None):
     """resize the image contained in the clipboard
        paste: paste the resized image in the currently focused widget if the parameter is set True
@@ -299,7 +309,7 @@ def checkAndResize(mime, editor):
             filecontents = requests.get(url)
             im.loadFromData(filecontents.content)
         elif containsLocalFileImageInUrl(mime):
-            im = QImage(url[len("file://"):])
+            im = QImage(extractLocalPathFromFileUrl(url))
 
         # resize it
         im = resize(im)
