@@ -23,11 +23,6 @@ import platform
 
 addon_id = '1214357311'
 
-# a temporary workaround to solve the CERTIFICATE_VERIFY_FAILED error
-if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
-    getattr(ssl, '_create_unverified_context', None)):
-    ssl._create_default_https_context = ssl._create_unverified_context
-
 # Get log file
 # 1214357311 is ImageResizer's addon ID
 irFolder = os.path.join(mw.pm.addonFolder(), addon_id, 'user_files')
