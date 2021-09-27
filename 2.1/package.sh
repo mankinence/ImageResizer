@@ -1,7 +1,7 @@
 TARGET_DIR=/tmp/image_resizer
 rm -rf ${TARGET_DIR}
 mkdir ${TARGET_DIR}
-cp __init__.py ${TARGET_DIR}
+cp -r __init__.py PIL ${TARGET_DIR}
 pushd ${TARGET_DIR} || exit
 zip -r ../image_resizer.ankiaddon *
 
