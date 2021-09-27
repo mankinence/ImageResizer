@@ -10,6 +10,7 @@ from aqt.qt import *
 from inspect import signature
 from bs4 import BeautifulSoup
 from PyQt5.QtCore import QUrl
+from PIL import Image, ImageQt
 
 import os
 import pickle
@@ -56,8 +57,7 @@ class Setup(object):
                 Shift = True, Extra = 'V'),
         width = '400',
         height = '400',
-        ratioKeep = 'height',
-        scalingMode = 'fast'
+        ratioKeep = 'height'
     )
 
     defaultConfig = copy.deepcopy(config)
@@ -141,16 +141,23 @@ def resize(im):
     isUpScalingDisabled = Setup.config['isUpScalingDisabled']
     heightInConfig = int(Setup.config['height'])
     widthInConfig = int(Setup.config['width'])
-    transformationMode = Qt.FastTransformation if (Setup.config['scalingMode'] == 'fast') else Qt.SmoothTransformation
 
     if option == 'height' or option == 'either' and im.width() <= im.height():
         if im.height() <= heightInConfig and not isUpScalingDisabled or im.height() > heightInConfig:
             logger.debug('scale according to height: {}'.format(int(Setup.config['height'])))
-            im = im.scaledToHeight(heightInConfig, transformationMode)
+            image = ImageQt.fromqimage(im)
+            heightPercent = heightInConfig / float(image.size[1])
+            resizedWidth = int((float(image.size[0]) * float(heightPercent)))
+            image = image.resize((resizedWidth, heightInConfig), Image.ANTIALIAS)
+            im = ImageQt.ImageQt(image)
     elif option == 'width' or option == 'either' and im.height() < im.width():
         if im.width() <= widthInConfig and not isUpScalingDisabled or im.width() > widthInConfig:
             logger.debug('scale according to width: {}'.format(int(Setup.config['width'])))
-            im = im.scaledToWidth(widthInConfig, transformationMode)
+            image = ImageQt.fromqimage(im)
+            widthPercent = widthInConfig / float(image.size[0])
+            resizedHeight = int((float(image.size[1]) * float(widthPercent)))
+            image = image.resize((widthInConfig, resizedHeight), Image.ANTIALIAS)
+            im = ImageQt.ImageQt(image)
 
     logger.debug('image after resizing, width: {}, height: {}'.format(im.width(), im.height()))
     return im
@@ -411,10 +418,6 @@ class Settings(QWidget):
             Setup.config['ratioKeep'] = 'width'
         elif self.ratioCb.currentIndex() == 2:
             Setup.config['ratioKeep'] = 'either'
-        if self.scalingCb.currentIndex() == 0:
-            Setup.config['scalingMode'] = 'fast'
-        elif self.scalingCb.currentIndex() == 1:
-            Setup.config['scalingMode'] = 'smooth'
         with open(self.pickleFile, 'wb') as f:
             pickle.dump(Setup.config, f)
 
@@ -447,10 +450,6 @@ class Settings(QWidget):
         elif Setup.config['ratioKeep'] == 'either':
             self.ratioCb.setCurrentIndex(2)
         self.setLineEditState()
-        if Setup.config['scalingMode'] == 'fast':
-            self.scalingCb.setCurrentIndex(0)
-        elif Setup.config['scalingMode'] == 'smooth':
-            self.scalingCb.setCurrentIndex(1)
         logger.debug('config is loaded from config.pickle: {}'.format(Setup.config))
 
     def reset(self):
@@ -497,15 +496,11 @@ class Settings(QWidget):
         self.grabKeyLabel = QLabel('Shortcut to paste the resized image: Ctrl+Shift+V')
         grabKeyBtn = QPushButton('Grab the shortcut', self)
         grabKeyBtn.clicked.connect(self.showGrabKey)
-        self.scalingCb = QComboBox(self)
-        self.scalingCb.addItem('use fast resizing')
-        self.scalingCb.addItem('use smooth resizing')
         keyHBox = QHBoxLayout()
         keyHBox.addWidget(self.grabKeyLabel)
         keyHBox.addWidget(grabKeyBtn)
         mainLayout.addWidget(self.enableCb)
         mainLayout.addWidget(self.disableUpScalingCb)
-        mainLayout.addWidget(self.scalingCb)
         mainLayout.addLayout(keyHBox)
 
         # add widgets to set height and width
