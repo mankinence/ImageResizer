@@ -36,9 +36,27 @@ if not os.path.exists(irFolder):
 open(logFile, 'w').close()
 
 # setup logger
-logging.basicConfig(format = '%(asctime)s - %(name)s - %(funcName)s:%(lineno)d - %(levelname)s - %(message)s', filename = logFile, level = logging.DEBUG)
-logging.disable(logging.INFO)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.CRITICAL)
+
+# define a Handler which writes WARNING messages or higher to sys.stderr
+console = logging.StreamHandler()
+console.setLevel(logging.WARNING)
+# set a format which is simpler for console use
+console.setFormatter(logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s'))
+# add the handler to the root logger
+logger.addHandler(console)
+
+# define a Handler which writes DEBUG messages or higher to logFile
+fileHandler = logging.FileHandler(filename = logFile)
+fileHandler.setLevel(logging.DEBUG)
+# set a format which is simpler for fileHandler use
+fileHandler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(funcName)s:%(lineno)d - %(levelname)s - %(message)s'))
+# add the handler to the root logger
+logger.addHandler(fileHandler)
+
+
+
 
 # settings main window, Qt won't show the window if
 # we don't assign a global variable to Settings()
