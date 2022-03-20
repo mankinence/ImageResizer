@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from anki.hooks import wrap
-from anki.media import MediaManager
-from aqt.utils import tooltip, showWarning
 from aqt.editor import Editor, EditorWebView
 from aqt import mw
 from aqt.qt import *
@@ -16,8 +14,6 @@ import pickle
 import logging
 import copy
 import shutil
-import tempfile
-import ssl
 import requests
 import platform
 
@@ -36,28 +32,29 @@ if not os.path.exists(irFolder):
 open(logFile, 'w').close()
 
 # setup logger
-logging.basicConfig(format = '%(asctime)s - %(name)s - %(funcName)s:%(lineno)d - %(levelname)s - %(message)s', filename = logFile, level = logging.DEBUG)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(funcName)s:%(lineno)d - %(levelname)s - %(message)s',
+                    filename=logFile, level=logging.DEBUG)
 logging.disable(logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 # settings main window, Qt won't show the window if
 # we don't assign a global variable to Settings()
 
 class Setup(object):
-
     """Do all the necessary initialization when anki
        loads the addon
     """
 
     config = dict(
-        isUpScalingDisabled = False,
-        auto = True,
-        keys = dict(Ctrl = True, Alt = False,
-                Shift = True, Extra = 'V'),
-        width = '400',
-        height = '400',
-        ratioKeep = 'height',
-        scalingMode = 'fast'
+        isUpScalingDisabled=False,
+        auto=True,
+        keys=dict(Ctrl=True, Alt=False,
+                  Shift=True, Extra='V'),
+        width='400',
+        height='400',
+        ratioKeep='height',
+        scalingMode='fast'
     )
 
     defaultConfig = copy.deepcopy(config)
@@ -84,7 +81,8 @@ class Setup(object):
             os.makedirs(Setup.irFolder)
         if not os.path.exists(Setup.pickleFile):
             # dump the default config if config.pickle doesn't exist
-            logger.debug("config.pickle doesn't exist, creating one with the default settings: {}".format(Setup.defaultConfig))
+            logger.debug(
+                "config.pickle doesn't exist, creating one with the default settings: {}".format(Setup.defaultConfig))
             with open(Setup.pickleFile, 'wb') as f:
                 pickle.dump(Setup.config, f)
 
@@ -112,11 +110,15 @@ class Setup(object):
         Editor.setupWeb = wrap(Editor.setupWeb, ImageResizerButton, 'after')
         Editor.imageResizer = imageResizer
 
-        if  len((signature(EditorWebView._processMime)).parameters) == 2:
+        if len((signature(EditorWebView._processMime)).parameters) == 2:
             EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around, 'around')
-        else:
+        elif len((signature(EditorWebView._processMime)).parameters) == 3:
             # From Anki 2.1.36, _processMime has one more parameter
             EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around_with_extended, 'around')
+        else:
+            # From Anki 2.1.50beta, _processMime has four parameters
+            # From Anki 2.1.36, _processMime has one more parameter
+            EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around_with_extended_and_drop_event, 'around')
 
     def _settings(self):
         """
@@ -128,6 +130,7 @@ class Setup(object):
         self.settingsMw.showNormal()
         self.settingsMw.raise_()
         self.settingsMw.activateWindow()
+
 
 def resize(im):
     """Resize the image
@@ -169,7 +172,8 @@ def isWebImageFile(url):
 
 
 def containsImage(qMimeData):
-    return containsImageInImageData(qMimeData) or containsImageInUrl(qMimeData) or (tryGettingImageSrcFromHtml(qMimeData) is not None)
+    return containsImageInImageData(qMimeData) or containsImageInUrl(qMimeData) or (
+                tryGettingImageSrcFromHtml(qMimeData) is not None)
 
 
 def containsImageInImageData(qMimeData):
@@ -185,7 +189,8 @@ def containsLocalFileImageInUrl(qMimeData):
 
 
 def containsWebImageInUrl(qMimeData):
-    return qMimeData.hasImage() and qMimeData.hasUrls() and qMimeData.urls() and isWebImageFile(qMimeData.urls()[0].toString())
+    return qMimeData.hasImage() and qMimeData.hasUrls() and qMimeData.urls() and isWebImageFile(
+        qMimeData.urls()[0].toString())
 
 
 def tryGettingImageSrcFromHtml(qMimeData):
@@ -197,8 +202,10 @@ def tryGettingImageSrcFromHtml(qMimeData):
         return None
     return QUrl.fromUserInput(imgs[0]["src"]).toString()
 
+
 def isWin():
     return platform.system() == "Windows"
+
 
 def extractLocalPathFromFileUrl(fileUrl):
     if isWin():
@@ -206,7 +213,8 @@ def extractLocalPathFromFileUrl(fileUrl):
     else:
         return fileUrl[len("file://"):]
 
-def imageResizer(self, paste = True, mime = None):
+
+def imageResizer(self, paste=True, mime=None):
     """resize the image contained in the clipboard
        paste: paste the resized image in the currently focused widget if the parameter is set True
        returns: QMimeData"""
@@ -227,7 +235,7 @@ def imageResizer(self, paste = True, mime = None):
             # paste it in the currently focused widget
             logger.debug('paste is True, paste it into current widget')
             clip = self.mw.app.clipboard()
-            clip.setMimeData(mime, mode = QClipboard.Clipboard)
+            clip.setMimeData(mime, mode=QClipboard.Clipboard)
 
             focusedWidget = QApplication.focusWidget()
             # logger.debug(focusedWidget)
@@ -236,11 +244,13 @@ def imageResizer(self, paste = True, mime = None):
 
     return mime
 
+
 def ImageResizerButton(self):
-    shortcut = '+' .join([k for k, v in list(Setup.config['keys'].items()) if v == True])
+    shortcut = '+'.join([k for k, v in list(Setup.config['keys'].items()) if v == True])
     shortcut += '+' + Setup.config['keys']['Extra']
-    self.addButton(func = lambda s = self: imageResizer(self),
-        icon = None, label = "Image Resizer", cmd = 'imageResizer(self)', keys = _(shortcut))
+    self.addButton(func=lambda s=self: imageResizer(self),
+                   icon=None, label="Image Resizer", cmd='imageResizer(self)', keys=_(shortcut))
+
 
 def _processMime_around(self, mime, _old):
     """I found that anki dealt with html, urls, text first before dealing with image,
@@ -259,10 +269,9 @@ def _processMime_around(self, mime, _old):
     logger.debug('hasUrls: {}'.format(mime.hasUrls()))
 
     if containsImage(mime):
-
         # Resize the image, then pass to Anki
         logger.debug('found image in mime data: getting the resized QImage...')
-        mime = self.editor.imageResizer(paste = False, mime = mime)
+        mime = self.editor.imageResizer(paste=False, mime=mime)
 
         logger.debug('let anki handle the resized image')
         return _old(self, mime)
@@ -271,8 +280,13 @@ def _processMime_around(self, mime, _old):
     logger.debug("image data isn't detected, run the old _processMime function")
     return _old(self, mime)
 
+
 def _processMime_around_with_extended(self, mime, extended, _old):
     return _processMime_around(self, mime, _old)
+
+def _processMime_around_with_extended_and_drop_event(self, mime, extended, drop_event, _old):
+    return _processMime_around(self, mime, _old)
+
 
 def checkAndResize(mime, editor):
     """check if mime contains url and if the url represents a picture file path, fetch the url and put the image in the clipboard if the url represents an image file
@@ -324,10 +338,12 @@ def checkAndResize(mime, editor):
 
     return mime
 
+
 class GrabKey(QWidget):
     """
     Grab the key combination to paste the resized image
     """
+
     def __init__(self, parent):
         super(GrabKey, self).__init__()
         self.parent = parent
@@ -353,7 +369,7 @@ class GrabKey(QWidget):
 
     def keyPressEvent(self, evt):
         self.active += 1
-        if evt.key() >0 and evt.key() < 127:
+        if evt.key() > 0 and evt.key() < 127:
             self.extra = chr(evt.key())
         elif evt.key() == Qt.Key_Control:
             self.ctrl = True
@@ -370,16 +386,18 @@ class GrabKey(QWidget):
                 msg.setText('Please press at least one of these keys: Ctrl/Alt/Shift')
                 msg.exec_()
                 return
-            Setup.config['keys'] = dict(Ctrl = self.ctrl, Alt = self.alt,
-                Shift = self.shift, Extra = self.extra)
+            Setup.config['keys'] = dict(Ctrl=self.ctrl, Alt=self.alt,
+                                        Shift=self.shift, Extra=self.extra)
             self.parent.updateKeyCombinations()
             self.close()
+
 
 class Settings(QWidget):
     """
     Image Resizer Settings Window
     """
-    def __init__(self, setup, config, parent = None):
+
+    def __init__(self, setup, config, parent=None):
         super(Settings, self).__init__(parent=parent)
 
         self.parent = parent
@@ -473,13 +491,13 @@ class Settings(QWidget):
 
         # add ctrl/shift/alt
         [label.setText(label.text() + k + '+')
-                for k, v in list(Setup.config['keys'].items())
-                    if k != 'Extra' and v == True]
+         for k, v in list(Setup.config['keys'].items())
+         if k != 'Extra' and v == True]
 
         # add the extra key
         if Setup.config['keys'].get('Extra'):
             label.setText(label.text() +
-                    Setup.config['keys'].get('Extra'))
+                          Setup.config['keys'].get('Extra'))
 
         logger.debug('shortcut is updated: {}'.format(Setup.config['keys']))
 
@@ -586,5 +604,6 @@ class Settings(QWidget):
         line.setFrameShape(QFrame.HLine)
         line.setFrameShadow(QFrame.Sunken)
         return line
+
 
 s = Setup(imageResizer)
