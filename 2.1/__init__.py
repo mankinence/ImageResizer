@@ -146,7 +146,18 @@ def resize(im):
     widthInConfig = int(Setup.config['width'])
     transformationMode = Qt.FastTransformation if (Setup.config['scalingMode'] == 'fast') else Qt.SmoothTransformation
 
-    if option == 'height' or option == 'either' and im.width() <= im.height():
+    if option == 'crop':
+        imageRatio = im.width() / im.height()
+        targetRatio = widthInConfig / heightInConfig
+        width = im.width() if targetRatio > imageRatio else im.height() * targetRatio
+        height = im.height() if targetRatio < imageRatio else im.width() // targetRatio
+        widthOffset = (im.width() - width) // 2
+        heightOffset = (im.height() - height) // 2
+        rect = QRect(widthOffset, heightOffset, width, height)
+        logger.debug('crop image, width: {}, height: {}'.format(width, height))
+        im = im.copy(rect)
+
+    if option == 'height' or option == 'either' and im.width() <= im.height() or option == 'crop':
         if im.height() <= heightInConfig and not isUpScalingDisabled or im.height() > heightInConfig:
             logger.debug('scale according to height: {}'.format(int(Setup.config['height'])))
             im = im.scaledToHeight(heightInConfig, transformationMode)
@@ -429,6 +440,8 @@ class Settings(QWidget):
             Setup.config['ratioKeep'] = 'width'
         elif self.ratioCb.currentIndex() == 2:
             Setup.config['ratioKeep'] = 'either'
+        elif self.ratioCb.currentIndex() == 3:
+            Setup.config['ratioKeep'] = 'crop'
         if self.scalingCb.currentIndex() == 0:
             Setup.config['scalingMode'] = 'fast'
         elif self.scalingCb.currentIndex() == 1:
@@ -464,6 +477,8 @@ class Settings(QWidget):
             self.ratioCb.setCurrentIndex(1)
         elif Setup.config['ratioKeep'] == 'either':
             self.ratioCb.setCurrentIndex(2)
+        elif Setup.config['ratioKeep'] == 'crop':
+            self.ratioCb.setCurrentIndex(3)
         self.setLineEditState()
         if Setup.config['scalingMode'] == 'fast':
             self.scalingCb.setCurrentIndex(0)
@@ -535,6 +550,7 @@ class Settings(QWidget):
         self.ratioCb.addItem('scale to height and keep ratio')
         self.ratioCb.addItem('scale to width and keep ratio')
         self.ratioCb.addItem('scale to the maximum dimension and keep ratio')
+        self.ratioCb.addItem('crop and scale')
         # QObject.connect(self.ratioCb, SIGNAL("currentIndexChanged(int)"), self.setLineEditState)
         self.ratioCb.currentIndexChanged.connect(self.setLineEditState)
 
@@ -596,6 +612,9 @@ class Settings(QWidget):
             self.disableLineEdit(self.heightEdit)
             self.enableLineEdit(self.widthEdit)
         elif self.ratioCb.currentIndex() == 2:
+            self.enableLineEdit(self.heightEdit)
+            self.enableLineEdit(self.widthEdit)
+        elif self.ratioCb.currentIndex() == 3:
             self.enableLineEdit(self.heightEdit)
             self.enableLineEdit(self.widthEdit)
 

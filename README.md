@@ -49,3 +49,5 @@ There's also a third option, `scale to the maximum dimension and keep ratio`.
 If this option is chosen, ImageResizer will scale to width if width > height,
 and will scale to height if height > width.
 This option is useful when the ratio of height/width of the image is extreme.
+Fourth option `crop and scale` change the image's ratio by cropping and then
+resizes it.
