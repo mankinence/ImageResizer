@@ -11,7 +11,6 @@ from PyQt5.QtCore import QUrl
 
 import os
 import pickle
-import logging
 import copy
 import shutil
 import requests
@@ -22,20 +21,10 @@ addon_id = '1214357311'
 # Get log file
 # 1214357311 is ImageResizer's addon ID
 irFolder = os.path.join(mw.pm.addonFolder(), addon_id, 'user_files')
-logFile = os.path.join(irFolder, 'imageResizer.log')
 
 # if ImageResizer's folder doesn't exist, create one
 if not os.path.exists(irFolder):
     os.makedirs(irFolder)
-
-# create the logFile
-open(logFile, 'w').close()
-
-# setup logger
-logging.basicConfig(format='%(asctime)s - %(name)s - %(funcName)s:%(lineno)d - %(levelname)s - %(message)s',
-                    filename=logFile, level=logging.DEBUG)
-logging.disable(logging.INFO)
-logger = logging.getLogger(__name__)
 
 
 # settings main window, Qt won't show the window if
@@ -70,27 +59,20 @@ class Setup(object):
         self.setupMenu()
         self.setupFunctions(imageResizer)
 
-        logger.debug('Setup init completed')
-
     def checkConfigAndLoad(self):
         """Check if the ImageResizer folder exists
            Create one if not, then load the configuration
         """
         if not os.path.exists(Setup.irFolder):
-            logger.debug("config folder doesn't exist, creating a new one...")
             os.makedirs(Setup.irFolder)
         if not os.path.exists(Setup.pickleFile):
             # dump the default config if config.pickle doesn't exist
-            logger.debug(
-                "config.pickle doesn't exist, creating one with the default settings: {}".format(Setup.defaultConfig))
             with open(Setup.pickleFile, 'wb') as f:
                 pickle.dump(Setup.config, f)
 
         # load config.pickle
-        logger.debug("loading config.pickle...")
         with open(self.pickleFile, 'rb') as f:
             Setup.config = pickle.load(f)
-            logger.debug("loaded config: {}".format(Setup.config))
 
     def setupMenu(self):
         """
@@ -124,7 +106,6 @@ class Setup(object):
         """
         Show the settings dialog if the user clicked on the menu
         """
-        logger.debug('triggered settings dialog')
         self.settingsMw = Settings(self, Setup.config)
 
         self.settingsMw.showNormal()
@@ -137,8 +118,6 @@ def resize(im):
     :im: QImage to be resized
     :returns: resized QImage
     """
-    logger.debug('resizing images...')
-    logger.debug('image before resizing, width: {}, height: {}'.format(im.width(), im.height()))
 
     option = Setup.config['ratioKeep']
     isUpScalingDisabled = Setup.config['isUpScalingDisabled']
@@ -148,14 +127,11 @@ def resize(im):
 
     if option == 'height' or option == 'either' and im.width() <= im.height():
         if im.height() <= heightInConfig and not isUpScalingDisabled or im.height() > heightInConfig:
-            logger.debug('scale according to height: {}'.format(int(Setup.config['height'])))
             im = im.scaledToHeight(heightInConfig, transformationMode)
     elif option == 'width' or option == 'either' and im.height() < im.width():
         if im.width() <= widthInConfig and not isUpScalingDisabled or im.width() > widthInConfig:
-            logger.debug('scale according to width: {}'.format(int(Setup.config['width'])))
             im = im.scaledToWidth(widthInConfig, transformationMode)
 
-    logger.debug('image after resizing, width: {}, height: {}'.format(im.width(), im.height()))
     return im
 
 
@@ -224,21 +200,15 @@ def imageResizer(self, paste=True, mime=None):
     # check if mime contains any image related urls, and put the image data in the clipboard if it contains it
     mime = checkAndResize(mime, self)
 
-    logger.debug('imageResizer called!')
-
     # check if mime contains images or any image file urls
     if containsImageInImageData(mime):
-        logger.debug('mime contains images relative data in it: {}'.format(mime))
-        logger.debug('paste action: {}'.format(paste))
 
         if paste:
             # paste it in the currently focused widget
-            logger.debug('paste is True, paste it into current widget')
             clip = self.mw.app.clipboard()
             clip.setMimeData(mime, mode=QClipboard.Clipboard)
 
             focusedWidget = QApplication.focusWidget()
-            # logger.debug(focusedWidget)
             # focusedWidget.paste()
             self.onPaste()
 
@@ -261,23 +231,15 @@ def _processMime_around(self, mime, _old):
 
     # "Paste when resizing"
     if Setup.config['auto'] is False:
-        logger.debug("Setup.config['auto'] is False, run the original _processMime directly")
         return _old(self, mime)
-
-    logger.debug('grabbing MIME data: found formats {}'.format(mime.formats()))
-    logger.debug('hasImage: {}'.format(mime.hasImage()))
-    logger.debug('hasUrls: {}'.format(mime.hasUrls()))
 
     if containsImage(mime):
         # Resize the image, then pass to Anki
-        logger.debug('found image in mime data: getting the resized QImage...')
         mime = self.editor.imageResizer(paste=False, mime=mime)
 
-        logger.debug('let anki handle the resized image')
         return _old(self, mime)
         # return self._processImage(mime)
 
-    logger.debug("image data isn't detected, run the old _processMime function")
     return _old(self, mime)
 
 
@@ -298,19 +260,14 @@ def checkAndResize(mime, editor):
     :returns: image filled QMimeData if the contained url represents an image file, the original QMimeData otherwise
     """
 
-    logger.debug('checking if mime data is an image or an URL to an image...')
-
     if containsImageInImageData(mime):
-        logger.debug('found image in mime, resize and return the mime')
         im = resize(mime.imageData())
         mime = QMimeData()
         mime.setImageData(im)
         return mime
 
     if containsImageInUrl(mime):
-        logger.debug(mime.urls())
         url = mime.urls()[0].toString()
-        logger.debug("Found url: " + url)
 
         # fetch the image
         if containsWebImageInUrl(mime):
@@ -330,7 +287,6 @@ def checkAndResize(mime, editor):
     if imgLink is not None:
         im = QImage()
         im.loadFromData(requests.get(imgLink).content)
-        logger.debug("resizing")
         im = resize(im)
         mime = QMimeData()
         mime.setImageData(im)
@@ -436,7 +392,6 @@ class Settings(QWidget):
         with open(self.pickleFile, 'wb') as f:
             pickle.dump(Setup.config, f)
 
-        logger.debug('saved config to config.pickle: {}'.format(Setup.config))
         self.close()
 
     def fillInMissedKeys(self, previousConfig, newConfig):
@@ -469,14 +424,11 @@ class Settings(QWidget):
             self.scalingCb.setCurrentIndex(0)
         elif Setup.config['scalingMode'] == 'smooth':
             self.scalingCb.setCurrentIndex(1)
-        logger.debug('config is loaded from config.pickle: {}'.format(Setup.config))
 
     def reset(self):
         """reset all configurations to default"""
         if os.path.exists(Setup.irFolder):
-            logger.debug('removing ImageResizer\'s folder')
             shutil.rmtree(Setup.irFolder)
-        logger.debug('set config to the default one: {}'.format(Setup.defaultConfig))
         Setup.config = copy.deepcopy(Setup.defaultConfig)
         self.setup.checkConfigAndLoad()
         self.checkPickle()
@@ -498,8 +450,6 @@ class Settings(QWidget):
         if Setup.config['keys'].get('Extra'):
             label.setText(label.text() +
                           Setup.config['keys'].get('Extra'))
-
-        logger.debug('shortcut is updated: {}'.format(Setup.config['keys']))
 
     def showGrabKey(self):
         self.GrabKeyWindow = GrabKey(self)
