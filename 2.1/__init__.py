@@ -119,6 +119,8 @@ def resize(im):
     :returns: resized QImage
     """
 
+    if Setup.config["auto"]:
+        return im
     option = Setup.config['ratioKeep']
     isUpScalingDisabled = Setup.config['isUpScalingDisabled']
     heightInConfig = int(Setup.config['height'])
@@ -230,9 +232,6 @@ def _processMime_around(self, mime, _old):
     This function is always called when pasting!"""
 
     # "Paste when resizing"
-    if Setup.config['auto'] is False:
-        return _old(self, mime)
-
     if containsImage(mime):
         # Resize the image, then pass to Anki
         mime = self.editor.imageResizer(paste=False, mime=mime)
