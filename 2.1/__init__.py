@@ -1,20 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from anki.hooks import wrap
-from aqt.editor import Editor, EditorWebView
-from aqt import mw
-from aqt.qt import *
-from inspect import signature
-from bs4 import BeautifulSoup
-from PyQt5.QtCore import QUrl
-
-import os
-import pickle
 import copy
-import shutil
-import requests
+import pickle
 import platform
+import shutil
+from inspect import signature
+
+import requests
+from anki.hooks import wrap
+from anki.lang import _
+from aqt import mw
+from aqt.editor import Editor, EditorWebView
+from aqt.qt import *
+from bs4 import BeautifulSoup
+
+try:
+    from PyQt6 import QtCore, QtGui, QtWidgets
+    from PyQt6.QtGui import QAction, QImage
+    from PyQt6.QtCore import Qt, QMimeData
+    from PyQt6.QtWidgets import (
+        QMainWindow, QApplication,
+        QLabel, QToolBar, QStatusBar, QWidget, QVBoxLayout, QMessageBox, QCheckBox, QPushButton, QComboBox, QHBoxLayout,
+        QLineEdit
+    )
+except ImportError:
+    from PyQt5 import QtGui
+    from PyQt5.QtCore import Qt, QMimeData
+    from PyQt5.QtWidgets import (
+        QApplication,
+        QLabel, QVBoxLayout, QMessageBox, QCheckBox, QPushButton, QComboBox, QHBoxLayout,
+        QLineEdit
+    )
 
 addon_id = '1214357311'
 
@@ -514,7 +531,7 @@ class Settings(QWidget):
         mainLayout.addLayout(btnLayout)
 
         # center the window
-        self.move(QDesktopWidget().availableGeometry().center() - self.frameGeometry().center())
+        self.move(QtGui.QGuiApplication.primaryScreen().availableGeometry().center() - self.frameGeometry().center())
         self.setWindowTitle('Image Resizer Settings')
         self.show()
         self.raise_()
