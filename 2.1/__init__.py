@@ -43,7 +43,7 @@ class Setup(object):
         width='400',
         height='400',
         ratioKeep='height',
-        scalingMode='fast'
+        scalingMode='smooth'
     )
 
     defaultConfig = copy.deepcopy(config)
