@@ -15,6 +15,7 @@ from aqt.editor import Editor, EditorWebView
 from aqt.qt import *
 from bs4 import BeautifulSoup
 from .resizer.PyQt import *
+from aqt import gui_hooks
 
 addon_id = '1214357311'
 
@@ -30,6 +31,18 @@ if not os.path.exists(irFolder):
 # settings main window, Qt won't show the window if
 # we don't assign a global variable to Settings()
 
+
+def will_process_mime_handler(mime: QMimeData, editor_web_view: EditorWebView, internal: bool, extended: bool, drop_event: bool):
+    if Setup.config['auto'] is False:
+        return mime
+
+    if containsImage(mime):
+        # Resize the image, then pass to Anki
+        return checkAndResize(mime)
+
+    return mime
+
+
 class Setup(object):
     """Do all the necessary initialization when anki
        loads the addon
@@ -39,7 +52,7 @@ class Setup(object):
         isUpScalingDisabled=False,
         auto=True,
         keys=dict(Ctrl=True, Alt=False,
-                  Shift=True, Extra='V'),
+                  Shift=True, Extra='F'),
         width='400',
         height='400',
         ratioKeep='height',
@@ -92,15 +105,18 @@ class Setup(object):
         Editor.setupWeb = wrap(Editor.setupWeb, ImageResizerButton, 'after')
         Editor.imageResizer = imageResizer
 
-        if len((signature(EditorWebView._processMime)).parameters) == 2:
-            EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around, 'around')
-        elif len((signature(EditorWebView._processMime)).parameters) == 3:
-            # From Anki 2.1.36, _processMime has one more parameter
-            EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around_with_extended, 'around')
-        else:
-            # From Anki 2.1.50beta, _processMime has four parameters
-            # From Anki 2.1.36, _processMime has one more parameter
-            EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around_with_extended_and_drop_event, 'around')
+        try:
+            gui_hooks.editor_will_process_mime.append(will_process_mime_handler)
+        except AttributeError:
+            # Probably the hook doesn't exist, we fall back to the old way
+            if len((signature(EditorWebView._processMime)).parameters) == 2:
+                EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around, 'around')
+            elif len((signature(EditorWebView._processMime)).parameters) == 3:
+                # From Anki 2.1.36, _processMime has one more parameter
+                EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around_with_extended, 'around')
+            else:
+                # From Anki 2.1.50beta, _processMime has four parameters
+                EditorWebView._processMime = wrap(EditorWebView._processMime, _processMime_around_with_extended_and_drop_event, 'around')
 
     def _settings(self):
         """
@@ -198,7 +214,7 @@ def imageResizer(self, paste=True, mime=None):
     if mime == None:
         mime = mw.app.clipboard().mimeData()
     # check if mime contains any image related urls, and put the image data in the clipboard if it contains it
-    mime = checkAndResize(mime, self)
+    mime = checkAndResize(mime)
 
     # check if mime contains images or any image file urls
     if containsImageInImageData(mime):
@@ -250,7 +266,7 @@ def _processMime_around_with_extended_and_drop_event(self, mime, extended, drop_
     return _processMime_around(self, mime, _old)
 
 
-def checkAndResize(mime, editor):
+def checkAndResize(mime):
     """check if mime contains url and if the url represents a picture file path, fetch the url and put the image in the clipboard if the url represents an image file
     the function will resize the image if it finds that mime contains it
 
@@ -462,7 +478,7 @@ class Settings(QWidget):
         # add widgets to set shortcut
         self.enableCb = QCheckBox('Resize on pasting', self)
         self.disableUpScalingCb = QCheckBox('Disable upscaling', self)
-        self.grabKeyLabel = QLabel('Shortcut to paste the resized image: Ctrl+Shift+V')
+        self.grabKeyLabel = QLabel('Shortcut to paste the resized image: Ctrl+Shift+F')
         grabKeyBtn = QPushButton('Grab the shortcut', self)
         grabKeyBtn.clicked.connect(self.showGrabKey)
         self.scalingCb = QComboBox(self)
