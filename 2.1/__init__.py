@@ -14,9 +14,19 @@ from aqt import mw
 from aqt.editor import Editor, EditorWebView
 from aqt.qt import *
 from bs4 import BeautifulSoup
-from .resizer.PyQt import *
 from aqt import gui_hooks
-
+from aqt.qt import (
+    QApplication,
+    QVBoxLayout,
+    QLineEdit,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QWidget,
+    QComboBox,
+    QGuiApplication,
+    Qt,
+)
 addon_id = '1214357311'
 
 # Get log file
@@ -139,7 +149,7 @@ def resize(im):
     isUpScalingDisabled = Setup.config['isUpScalingDisabled']
     heightInConfig = int(Setup.config['height'])
     widthInConfig = int(Setup.config['width'])
-    transformationMode = Qt.FastTransformation if (Setup.config['scalingMode'] == 'fast') else Qt.SmoothTransformation
+    transformationMode = Qt.TransformationMode.FastTransformation if (Setup.config['scalingMode'] == 'fast') else Qt.TransformationMode.SmoothTransformation
 
     if option == 'height' or option == 'either' and im.width() <= im.height():
         if im.height() <= heightInConfig and not isUpScalingDisabled or im.height() > heightInConfig:
@@ -222,7 +232,7 @@ def imageResizer(self, paste=True, mime=None):
         if paste:
             # paste it in the currently focused widget
             clip = self.mw.app.clipboard()
-            clip.setMimeData(mime, mode=QClipboard.Clipboard)
+            clip.setMimeData(mime, mode=QClipboard.Mode.Clipboard)
 
             focusedWidget = QApplication.focusWidget()
             # focusedWidget.paste()
@@ -343,11 +353,11 @@ class GrabKey(QWidget):
         self.active += 1
         if evt.key() > 0 and evt.key() < 127:
             self.extra = chr(evt.key())
-        elif evt.key() == Qt.Key_Control:
+        elif evt.key() == Qt.Key.Key_Control:
             self.ctrl = True
-        elif evt.key() == Qt.Key_Alt:
+        elif evt.key() == Qt.Key.Key_Alt:
             self.alt = True
-        elif evt.key() == Qt.Key_Shift:
+        elif evt.key() == Qt.Key.Key_Shift:
             self.shift = True
 
     def keyReleaseEvent(self, evt):
@@ -391,7 +401,7 @@ class Settings(QWidget):
         """save settings to the current directory where the plugin lies,
            then close the settings window
         """
-        Setup.config['isUpScalingDisabled'] = self.disableUpScalingCb.isChecked();
+        Setup.config['isUpScalingDisabled'] = self.disableUpScalingCb.isChecked()
         Setup.config['auto'] = self.enableCb.isChecked()
         Setup.config['width'] = self.widthEdit.text()
         Setup.config['height'] = self.heightEdit.text()
@@ -530,7 +540,7 @@ class Settings(QWidget):
         mainLayout.addLayout(btnLayout)
 
         # center the window
-        self.move(QtGui.QGuiApplication.primaryScreen().availableGeometry().center() - self.frameGeometry().center())
+        self.move(QGuiApplication.primaryScreen().availableGeometry().center() - self.frameGeometry().center())
         self.setWindowTitle('Image Resizer Settings')
         self.show()
         self.raise_()
@@ -541,8 +551,8 @@ class Settings(QWidget):
 
         # change color
         palette = QPalette()
-        palette.setColor(QPalette.Base, Qt.gray)
-        palette.setColor(QPalette.Text, Qt.darkGray)
+        palette.setColor(QPalette.ColorRole.Base, QColorConstants.Svg.gray)
+        palette.setColor(QPalette.ColorRole.Text, QColorConstants.Svg.white)
         lineEdit.setPalette(palette)
 
     def enableLineEdit(self, lineEdit):
@@ -550,8 +560,8 @@ class Settings(QWidget):
 
         # change color
         palette = QPalette()
-        palette.setColor(QPalette.Base, Qt.white)
-        palette.setColor(QPalette.Text, Qt.black)
+        palette.setColor(QPalette.ColorRole.Base, QColorConstants.Svg.white)
+        palette.setColor(QPalette.ColorRole.Text, QColorConstants.Svg.black)
         lineEdit.setPalette(palette)
 
     def setLineEditState(self):
@@ -567,8 +577,8 @@ class Settings(QWidget):
 
     def hLine(self):
         line = QFrame()
-        line.setFrameShape(QFrame.HLine)
-        line.setFrameShadow(QFrame.Sunken)
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setFrameShadow(QFrame.Shadow.Sunken)
         return line
 
 
